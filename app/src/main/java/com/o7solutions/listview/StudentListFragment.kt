@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.o7solutions.ClickInterface
 import com.o7solutions.listview.adapter.MyAdapter
 import com.o7solutions.listview.databinding.FragmentDialogBinding
@@ -26,19 +25,12 @@ private const val ARG_PARAM2 = "param2"
  */
 class StudentListFragment : Fragment(), ClickInterface {
     lateinit var binding: FragmentStudentListBinding
-    lateinit var etName:EditText
-    lateinit var etRollNo:EditText
-    lateinit var etNumber:EditText
-    lateinit var btnCancel:Button
-    lateinit var btnAdd:Button
    lateinit var myadapter: MyAdapter
-     var userList=ArrayList<StudentModel>()
-
-
+   var mobilePattern = "[0-9]{10}"
+   var userList=ArrayList<StudentModel>()
     lateinit var mainActivity: MainActivity
     private var param1: String? = null
     private var param2: String? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainActivity = activity as MainActivity
@@ -51,50 +43,40 @@ class StudentListFragment : Fragment(), ClickInterface {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-//        val v= inflater.inflate(R.layout.fragment_dialog, container, false)
         binding= FragmentStudentListBinding.inflate(layoutInflater)
         myadapter= MyAdapter(mainActivity,userList,this)
         binding.listView.adapter=myadapter
         binding.btnDialogOpen.setOnClickListener {
-            val v=LayoutInflater.from(mainActivity).inflate(R.layout.fragment_dialog,null)
-            val dialog=Dialog(mainActivity)
-            dialog.setContentView(v)
-            dialog.create()
-            dialog.show()
-            etName=v.findViewById(R.id.etName)
-            etRollNo=v.findViewById(R.id.etRollNo)
-            etNumber=v.findViewById(R.id.etNumber)
-            btnAdd=v.findViewById(R.id.btnAdd)
-            btnCancel=v.findViewById(R.id.btnCancel)
-            btnAdd.setOnClickListener {
-                val name = etName.text.toString()
-                val rollNo = etRollNo.text.toString()
-                val number = etNumber.text.toString()
-                if(etName.text.isEmpty()){
-                    etName.setError("Enter Name")
-                }else if(etRollNo.text.isEmpty()){
-                    etRollNo.setError("Enter RollNo.")
-                }else if(etNumber.text.isEmpty()){
-                    etNumber.setError("Enter Number")
-                }else {
-
-                    userList.add(StudentModel("$name", "$rollNo", "$number"))
+            val binding=FragmentDialogBinding.inflate(layoutInflater)
+            val addDialog=Dialog(mainActivity)
+            addDialog.setContentView(binding.root)
+            addDialog.create()
+            addDialog.show()
+            binding.btnAdd.setOnClickListener {
+                if(binding.etName.text.isEmpty()){
+                    binding.etName.setError("Enter Name")
+                }else if(binding.etRollNo.text.isEmpty()){
+                    binding.etRollNo.setError("Enter RollNo.")
+                }else if(binding.etNumber.text.isEmpty()){
+                    binding.etNumber.setError("Enter Number")
+                }else if(binding.etNumber.length()< 10) {
+                    binding.etNumber.setError("Type 10 Digit Number")
+                }else{
+                    userList.add(StudentModel("${binding.etName.text.toString().trim()}",
+                        "${binding.etRollNo.text.toString().trim()}", "${binding.etNumber.text.toString().trim()}"))
                     println("Array" + userList)
                     myadapter.notifyDataSetChanged()
                     Toast.makeText(requireContext(), "Student Added", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
+                    addDialog.dismiss()
                 }
-
             }
-                btnCancel.setOnClickListener {
-                    dialog.dismiss()
+                binding.btnCancel.setOnClickListener {
+                    addDialog.dismiss()
                     Toast.makeText(requireContext(), "Cancel", Toast.LENGTH_SHORT).show()
                 }
         }
         return binding.root
     }
-
-
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -114,46 +96,39 @@ class StudentListFragment : Fragment(), ClickInterface {
                 }
             }
     }
-
     override fun editClick(studentModel: StudentModel, position: Int) {
-        val v=LayoutInflater.from(mainActivity).inflate(R.layout.fragment_dialog,null)
-        val dialog=Dialog(mainActivity)
-        dialog.setContentView(v)
-        dialog.create()
-        dialog.show()
-        etName=v.findViewById(R.id.etName)
-        etRollNo=v.findViewById(R.id.etRollNo)
-        etNumber=v.findViewById(R.id.etNumber)
-        btnAdd=v.findViewById(R.id.btnAdd)
-        btnCancel=v.findViewById(R.id.btnCancel)
-        btnAdd.setOnClickListener {
-            val name = etName.text.toString()
-            val rollNo = etRollNo.text.toString()
-            val number = etNumber.text.toString()
-            if(etName.text.isEmpty()){
-                etName.setError("Enter Name")
-            }else if(etRollNo.text.isEmpty()){
-                etRollNo.setError("Enter RollNo.")
-            }else if(etNumber.text.isEmpty()){
-                etNumber.setError("Enter Number")
+        val binding=FragmentDialogBinding.inflate(layoutInflater)
+        val editDialog=Dialog(mainActivity)
+        editDialog.setContentView(binding.root)
+        editDialog.create()
+        editDialog.show()
+        binding.btnAdd.text = "Update"
+        binding.tvStudent.text="Update Student"
+        binding.etName.setText(studentModel.name)
+        binding.etRollNo.setText(studentModel.rollNo)
+        binding.etNumber.setText(studentModel.phoneNumber)
+        binding.btnAdd.setOnClickListener {
+            if(binding.etName.text.isEmpty()){
+                binding.etName.setError("Enter Name")
+            }else if(binding.etRollNo.text.isEmpty()){
+                binding.etRollNo.setError("Enter RollNo.")
+            }else if(binding.etNumber.text.isEmpty()){
+                binding.etNumber.setError("Enter Number")
             }else {
-
-                userList.add(StudentModel("$name", "$rollNo", "$number"))
+                userList.set(position,StudentModel(name = binding.etName.text.toString(),
+                    rollNo=binding.etRollNo.text.toString(), phoneNumber = binding.etNumber.text.toString()))
                 println("Array" + userList)
                 myadapter.notifyDataSetChanged()
+                editDialog.dismiss()
             }
-
         }
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
+        binding.btnCancel.setOnClickListener {
+            editDialog.dismiss()
             Toast.makeText(requireContext(), "Cancel", Toast.LENGTH_SHORT).show()
         }
-        }
-
+    }
     override fun deleteClick(studentModel: StudentModel, position: Int) {
         userList.removeAt(position)
-        userList.clear()
+        myadapter.notifyDataSetChanged()
     }
-
-
 }
